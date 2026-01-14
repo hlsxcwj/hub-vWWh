@@ -3,6 +3,7 @@ import jieba  # 分词
 from sklearn.feature_extraction.text import CountVectorizer  # 词频统计
 from sklearn.neighbors import  KNeighborsClassifier  # KNN
 from openai import  OpenAI
+
 dataset = pd.read_csv("dataset.csv", sep="\t", header=None, nrows=10000)
 input_sentence = dataset[0].apply(lambda x: " ".join(jieba.lcut(x)))  # 分词
 print(input_sentence.head(5))
