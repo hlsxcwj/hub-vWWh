@@ -9,19 +9,26 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
+dataset = pd.read_csv('dataset.csv', sep='\t', header=None, nrows=None)
+input_sentense = dataset[0].apply(lambda x : ' '.join(jieba.lcut(x)))
+
+vector = CountVectorizer()
+input_feature = vector.fit_transform(input_sentense.values) # 对划分后的文本词语进行编号并转换成向量
+
+model = KNeighborsClassifier(n_neighbors=3) # KNN3
+model.fit(input_feature, dataset[1].values)
+
+client = OpenAI(
+    api_key='sk-08a6acbb4a2e46e195b8199036824588',
+
+    base_url='https://dashscope.aliyuncs.com/compatible-mode/v1',
+)
+
 @app.get("/text-cls/ml")
 def text_classify_using_ml(text: str) -> str:
     """
     用机器学习进行文本分类
     """
-    dataset = pd.read_csv('dataset.csv', sep='\t', header=None, nrows=None)
-    input_sentense = dataset[0].apply(lambda x : ' '.join(jieba.lcut(x)))
-
-    vector = CountVectorizer()
-    input_feature = vector.fit_transform(input_sentense.values) # 对划分后的文本词语进行编号并转换成向量
-
-    model = KNeighborsClassifier(n_neighbors=3) # KNN3
-    model.fit(input_feature, dataset[1].values)
     text_feature = vector.transform([' '.join(jieba.lcut(text))])
     return model.predict(text_feature)[0]
 
@@ -30,12 +37,6 @@ def text_classify_using_llm(text: str) -> str:
     """
     用大模型进行文本分类
     """
-    client = OpenAI(
-        api_key='sk-08a6acbb4a2e46e195b8199036824588',
-
-        base_url='https://dashscope.aliyuncs.com/compatible-mode/v1',
-    )
-
     completion = client.chat.completions.create(
         model='qwen-flash',
 
